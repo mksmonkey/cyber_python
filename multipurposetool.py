@@ -6,7 +6,15 @@ from barcode.writer import ImageWriter
 import random
 import requests
 import phonenumbers
-from phonenumbers import geocoder, carrier, timezone
+from phonenumbers import (
+    geocoder,
+    carrier,
+    timezone,
+    PhoneNumberType,
+    number_type,
+    is_possible_number,
+    is_valid_number,
+)
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
@@ -61,40 +69,60 @@ def password_generator(length):
 
 # Function 6: Wordlist Generator
 def wordlist_generator(words, filename):
-    with open(filename, 'w') as file:
-        for word in words:
-            file.write(word + '\n')
-    print(f"Wordlist saved as {filename}")
+    try:
+        with open(filename, 'w') as file:
+            for word in words:
+                file.write(word + '\n')
+        print(f"✅ Wordlist saved as '{filename}' successfully!")
+    except Exception as e:
+        print(f"❌ Error saving wordlist: {e}")
+
 
 # Function 7: Phone Number Information Gathering
 
-
-def phone_info(number):
+type_map = {
+    PhoneNumberType.FIXED_LINE: "Fixed Line",
+    PhoneNumberType.MOBILE: "Mobile",
+    PhoneNumberType.FIXED_LINE_OR_MOBILE: "Fixed or Mobile",
+    PhoneNumberType.TOLL_FREE: "Toll Free",
+    PhoneNumberType.PREMIUM_RATE: "Premium Rate",
+    PhoneNumberType.SHARED_COST: "Shared Cost",
+    PhoneNumberType.VOIP: "VoIP",
+    PhoneNumberType.PERSONAL_NUMBER: "Personal Number",
+    PhoneNumberType.PAGER: "Pager",
+    PhoneNumberType.UAN: "UAN",
+    PhoneNumberType.VOICEMAIL: "Voicemail",
+    PhoneNumberType.UNKNOWN: "Unknown"
+}
+def full_phone_info(number_str, region="IN"):
     try:
-        # Parse the phone number
-        parsed_number = phonenumbers.parse(number)
+        print("\n🔍 Parsing phone number...\n")
+        number = phonenumbers.parse(number_str, region)
 
-        # Validate if the number is valid
-        is_valid = phonenumbers.is_valid_number(parsed_number)
+        # Validity and possibility
+        print(f"Valid: {is_valid_number(number)}")
+        print(f"Possible: {is_possible_number(number)}")
 
-        # Get the region or country
-        country = geocoder.description_for_number(parsed_number, "en")
+        # Type
+        num_type = number_type(number)
+        print(f"Number Type: {type_map.get(num_type, 'Unknown')}")
 
-        # Get the carrier (telecom provider)
-        phone_carrier = carrier.name_for_number(parsed_number, "en")
+        # Region
+        region_info = geocoder.description_for_number(number, "en")
+        print(f"Region: {region_info}")
 
-        # Get the timezone
-        time_zones = timezone.time_zones_for_number(parsed_number)
+        # Carrier
+        phone_carrier = carrier.name_for_number(number, "en")
+        print(f"Carrier: {phone_carrier if phone_carrier else 'Unknown'}")
 
-        # Print the details
-        print("Phone Number Information:")
-        print(f"Valid: {is_valid}")
-        print(f"Country: {country}")
-        print(f"Carrier: {phone_carrier}")
-        print(f"Timezones: {', '.join(time_zones)}")
+        # Timezones
+        time_zones = timezone.time_zones_for_number(number)
+        print(f"Timezone(s): {', '.join(time_zones)}")
 
-    except phonenumbers.phonenumberutil.NumberParseException as e:
-        print(f"Error: {e}")
+    except phonenumbers.NumberParseException as e:
+        print(f"❌ Error: {e}")
+
+
 
 # Function 8: Subdomain Checker
 def subdomain_checker(domain, subdomains):
@@ -167,7 +195,7 @@ def main():
 
         elif choice == "7":
             phone_number = input("Enter the phone number: ")
-            phone_info(phone_number)
+            full_phone_info(phone_number)
 
         elif choice == "8":
             domain = input("Enter the domain: ")
