@@ -1,0 +1,5 @@
+qrcode
+python-barcode
+Pillow
+requests
+phonenumbers
