@@ -1,4 +1,5 @@
 qrcode
+barcode
 python-barcode
 Pillow
 requests
